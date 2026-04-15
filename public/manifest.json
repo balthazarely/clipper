@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Quick Capture",
+  "version": "1.0.0",
+  "description": "Clipboard manager and quick capture hub",
+  "permissions": [
+    "clipboardRead",
+    "clipboardWrite",
+    "storage",
+    "tabs",
+    "sidePanel"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "action": {
+    "default_title": "Open Quick Capture",
+    "default_icon": "icon.png"
+  }
+}
