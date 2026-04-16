@@ -1,9 +1,66 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useRef } from "react";
 import { ROUTE_TRANSITION } from "../lib/constants";
+import type { Folder, TabGroup } from "../lib/types";
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    chrome.storage.local.get(["tabGroups", "folders"], (result) => {
+      const data = {
+        folders: (result.folders as Folder[]) || [],
+        groups: (result.tabGroups as TabGroup[]) || [],
+      };
+
+      const dataStr = JSON.stringify(data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `tab-vault-backup-${Date.now()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const data = JSON.parse(content);
+
+        if (!data.folders || !data.groups) {
+          alert("Invalid backup file format");
+          return;
+        }
+
+        chrome.storage.local.set({
+          folders: data.folders,
+          tabGroups: data.groups,
+        });
+
+        alert("Data imported successfully. Please refresh the extension.");
+      } catch (error) {
+        alert("Error importing data: Invalid JSON format");
+      }
+    };
+
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   return (
     <motion.div
@@ -25,30 +82,28 @@ export function SettingsPage() {
 
       <div className="flex flex-col gap-4 px-4 pb-4">
         <div className="bg-white rounded-2xl border border-gray-200 p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">About</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Data</h3>
           <div className="space-y-2">
-            <p className="text-xs text-gray-600">
-              <span className="font-medium">Version:</span> 1.0.0
-            </p>
-            <p className="text-xs text-gray-600">
-              <span className="font-medium">Name:</span> Tab Vault
-            </p>
+            <button
+              className="w-full text-left text-xs text-indigo-600 font-medium px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors border border-indigo-200"
+              onClick={handleExport}
+            >
+              Export data
+            </button>
+            <button
+              className="w-full text-left text-xs text-indigo-600 font-medium px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors border border-indigo-200"
+              onClick={handleImportClick}
+            >
+              Import data
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
           </div>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-gray-200 p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Data Management</h3>
-          <button
-            className="w-full text-left text-xs text-red-600 font-medium px-3 py-2 rounded-lg hover:bg-red-50 transition-colors border border-red-200"
-            onClick={() => {
-              if (confirm("Are you sure? This will delete all tab groups and folders.")) {
-                chrome.storage.local.clear();
-                alert("Data cleared. Please refresh the extension.");
-              }
-            }}
-          >
-            Clear all data
-          </button>
         </div>
       </div>
     </motion.div>
