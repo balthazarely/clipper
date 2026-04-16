@@ -11,15 +11,17 @@ export type ShellContext = {
   groups: TabGroup[];
   folders: Folder[];
   saveGroup: (group: TabGroup) => void;
-  createFolder: (name: string) => void;
+  createFolder: (name: string, icon?: string, iconColor?: string) => void;
   deleteFolder: (id: string) => void;
   updateFolder: (id: string, name: string) => void;
+  updateFolderAppearance: (id: string, icon: string, iconColor: string) => void;
   deleteGroup: (id: string) => void;
   moveGroup: (id: string, folderId: string | undefined) => void;
   reorderGroups: (reordered: TabGroup[]) => void;
   reorderFolders: (reordered: Folder[]) => void;
   updateGroup: (id: string, tabs: import("../../lib/types").SavedTab[]) => void;
   renameGroup: (id: string, name: string) => void;
+  updateGroupAppearance: (id: string, icon: string, iconColor: string) => void;
 };
 
 export function Shell(props: ShellContext) {
@@ -35,10 +37,7 @@ export function Shell(props: ShellContext) {
       <Header onNewGroup={() => navigate("/")} />
 
       <LayoutGroup>
-        <div
-          role="tablist"
-          className="flex items-center gap-4 px-3 pt-2 pb-1 border-b border-gray-200"
-        >
+        <div role="tablist" className="flex items-center gap-4 px-3 pt-2 pb-1 border-b border-gray-200">
           <motion.button
             role="tab"
             onClick={() => navigate("/")}
@@ -72,22 +71,9 @@ export function Shell(props: ShellContext) {
 
       <div className="relative flex-1 overflow-hidden">
         <AnimatePresence mode="popLayout">
-          {location.pathname === "/" && (
-            <NewGroupPage key="new-group" context={props} />
-          )}
-          {location.pathname === "/folders" && !isFolderDetail && (
-            <FolderListPage
-              key="folders-list"
-              context={props}
-              location={location}
-            />
-          )}
-          {isFolderDetail && (
-            <FolderDetailPage
-              key={`folder-${params.folderId}`}
-              context={props}
-            />
-          )}
+          {location.pathname === "/" && <NewGroupPage key="new-group" context={props} />}
+          {location.pathname === "/folders" && !isFolderDetail && <FolderListPage key="folders-list" context={props} location={location} />}
+          {isFolderDetail && <FolderDetailPage key={`folder-${params.folderId}`} context={props} />}
         </AnimatePresence>
       </div>
     </div>

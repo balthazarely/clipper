@@ -51,8 +51,8 @@ function App() {
     chrome.storage.local.set({ tabGroups: updated });
   };
 
-  const createFolder = (name: string) => {
-    const folder: Folder = { id: String(Date.now()), name };
+  const createFolder = (name: string, icon?: string, iconColor?: string) => {
+    const folder: Folder = { id: String(Date.now()), name, icon, iconColor };
     const updated = [...folders, folder];
     setFolders(updated);
     chrome.storage.local.set({ folders: updated });
@@ -60,9 +60,7 @@ function App() {
 
   const deleteFolder = (id: string) => {
     const updatedFolders = folders.filter((f) => f.id !== id);
-    const updatedGroups = groups.map((g) =>
-      g.folderId === id ? { ...g, folderId: undefined } : g,
-    );
+    const updatedGroups = groups.map((g) => (g.folderId === id ? { ...g, folderId: undefined } : g));
     setFolders(updatedFolders);
     setGroups(updatedGroups);
     chrome.storage.local.set({ folders: updatedFolders, tabGroups: updatedGroups });
@@ -70,6 +68,12 @@ function App() {
 
   const updateFolder = (id: string, name: string) => {
     const updated = folders.map((f) => (f.id === id ? { ...f, name } : f));
+    setFolders(updated);
+    chrome.storage.local.set({ folders: updated });
+  };
+
+  const updateFolderAppearance = (id: string, icon: string, iconColor: string) => {
+    const updated = folders.map((f) => (f.id === id ? { ...f, icon, iconColor } : f));
     setFolders(updated);
     chrome.storage.local.set({ folders: updated });
   };
@@ -86,12 +90,22 @@ function App() {
     chrome.storage.local.set({ tabGroups: updated });
   };
 
+  const updateGroupAppearance = (id: string, icon: string, iconColor: string) => {
+    const updated = groups.map((g) => (g.id === id ? { ...g, icon, iconColor } : g));
+    setGroups(updated);
+    chrome.storage.local.set({ tabGroups: updated });
+  };
+
   const reorderGroups = (reordered: TabGroup[]) => {
     const ids = new Set(reordered.map((g) => g.id));
     const indices: number[] = [];
-    groups.forEach((g, i) => { if (ids.has(g.id)) indices.push(i); });
+    groups.forEach((g, i) => {
+      if (ids.has(g.id)) indices.push(i);
+    });
     const updated = [...groups];
-    indices.forEach((idx, i) => { updated[idx] = reordered[i]; });
+    indices.forEach((idx, i) => {
+      updated[idx] = reordered[i];
+    });
     setGroups(updated);
     chrome.storage.local.set({ tabGroups: updated });
   };
@@ -99,14 +113,34 @@ function App() {
   const reorderFolders = (reordered: Folder[]) => {
     const ids = new Set(reordered.map((f) => f.id));
     const indices: number[] = [];
-    folders.forEach((f, i) => { if (ids.has(f.id)) indices.push(i); });
+    folders.forEach((f, i) => {
+      if (ids.has(f.id)) indices.push(i);
+    });
     const updated = [...folders];
-    indices.forEach((idx, i) => { updated[idx] = reordered[i]; });
+    indices.forEach((idx, i) => {
+      updated[idx] = reordered[i];
+    });
     setFolders(updated);
     chrome.storage.local.set({ folders: updated });
   };
 
-  const context = { tabs, groups, folders, saveGroup, createFolder, deleteFolder, updateFolder, deleteGroup, moveGroup, reorderGroups, reorderFolders, updateGroup, renameGroup };
+  const context = {
+    tabs,
+    groups,
+    folders,
+    saveGroup,
+    createFolder,
+    deleteFolder,
+    updateFolder,
+    deleteGroup,
+    moveGroup,
+    reorderGroups,
+    reorderFolders,
+    updateGroup,
+    renameGroup,
+    updateGroupAppearance,
+    updateFolderAppearance,
+  };
 
   return (
     <MemoryRouter>

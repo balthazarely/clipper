@@ -1,4 +1,4 @@
-export type Folder = { id: string; name: string };
+export type Folder = { id: string; name: string; icon?: string; iconColor?: string };
 
 export type TabGroup = {
   id: string;
@@ -6,6 +6,8 @@ export type TabGroup = {
   description: string;
   label?: string;
   folderId?: string;
+  icon?: string;
+  iconColor?: string;
   tabs: SavedTab[];
   savedAt: number;
 };

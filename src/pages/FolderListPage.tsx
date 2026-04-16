@@ -1,55 +1,19 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, Reorder, useDragControls } from "framer-motion";
+import { motion, Reorder, AnimatePresence } from "framer-motion";
 import type { Location } from "react-router-dom";
 import { FolderCard } from "../components/FolderCard/FolderCard";
+import { SortableFolder } from "../components/SortableFolder/SortableFolder";
 import type { ShellContext } from "../components/Shell/Shell";
 import type { Folder } from "../lib/types";
+import { ROUTE_TRANSITION, GROUP_ICONS, DOT_COLORS } from "../lib/constants";
+import { getDepth } from "../lib/utils";
 
-function SortableFolder({
-  folder,
-  count,
-  onNavigate,
-}: {
-  folder: Folder;
-  count: number;
-  onNavigate: () => void;
-}) {
-  const controls = useDragControls();
-
-  return (
-    <Reorder.Item
-      key={folder.id}
-      value={folder}
-      as="div"
-      className="flex-1 min-w-0"
-    >
-      <FolderCard
-        id={folder.id}
-        name={folder.name}
-        count={count}
-        onClick={onNavigate}
-        dragControls={controls}
-      />
-    </Reorder.Item>
-  );
-}
-
-function getDepth(pathname: string): number {
-  if (pathname.startsWith("/folders/")) return 2;
-  if (pathname === "/folders") return 1;
-  return 0;
-}
-
-export function FolderListPage({
-  context,
-  location,
-}: {
-  context: ShellContext;
-  location: Location;
-}) {
-  const { folders, groups, createFolder, reorderFolders } = context;
+export function FolderListPage({ context, location }: { context: ShellContext; location: Location }) {
+  const { folders, groups, createFolder, reorderFolders, deleteFolder, updateFolder, updateFolderAppearance } = context;
   const navigate = useNavigate();
+  const fromFolderDetail = Boolean((location.state as { fromFolderDetail?: boolean } | null)?.fromFolderDetail);
+  const [isNavigatingToDetail, setIsNavigatingToDetail] = useState(false);
   const prevDepthRef = useRef<number>(getDepth(location.pathname));
   const [isReturning, setIsReturning] = useState(false);
 
@@ -64,9 +28,10 @@ export function FolderListPage({
     prevDepthRef.current = currentDepth;
   }, [location.pathname]);
 
-  const [search, setSearch] = useState("");
-  const [newFolderName, setNewFolderName] = useState("");
-  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createIcon, setCreateIcon] = useState(GROUP_ICONS[0].id);
+  const [createColor, setCreateColor] = useState(DOT_COLORS[0]);
   const [localOrder, setLocalOrder] = useState<Folder[]>(folders);
 
   useEffect(() => {
@@ -74,21 +39,16 @@ export function FolderListPage({
   }, [folders]);
 
   const ungroupedCount = groups.filter((g) => !g.folderId).length;
-  const filteredFolders = search
-    ? folders.filter(
-        (f) => !search || f.name.toLowerCase().includes(search.toLowerCase()),
-      )
-    : localOrder;
-  const showUngrouped =
-    ungroupedCount > 0 &&
-    (!search || "ungrouped".includes(search.toLowerCase()));
+  const showUngrouped = ungroupedCount > 0;
 
   const submitFolder = () => {
-    const n = newFolderName.trim();
+    const n = createName.trim();
     if (!n) return;
-    createFolder(n);
-    setNewFolderName("");
-    setShowNewFolder(false);
+    createFolder(n, createIcon, createColor);
+    setCreateName("");
+    setCreateIcon(GROUP_ICONS[0].id);
+    setCreateColor(DOT_COLORS[0]);
+    setShowCreateModal(false);
   };
 
   const handleReorder = (newOrder: Folder[]) => {
@@ -96,73 +56,28 @@ export function FolderListPage({
     reorderFolders(newOrder);
   };
 
+  const openFolderDetail = (id: string) => {
+    setIsNavigatingToDetail(true);
+    navigate(`/folders/${id}`);
+  };
+
   return (
     <motion.div
-      initial={{ x: isReturning ? "100%" : "-100%" }}
+      initial={{ x: fromFolderDetail || isReturning ? "-100%" : "100%" }}
       animate={{ x: 0 }}
-      exit={{ x: "-100%" }}
-      transition={{ duration: 0.35, ease: "easeInOut" }}
+      exit={{ x: isNavigatingToDetail ? "-100%" : "100%" }}
+      transition={ROUTE_TRANSITION}
       className="absolute inset-0 w-full h-full flex flex-col overflow-hidden"
     >
-      {/* <div className="flex items-center gap-2 mx-3 mt-2 bg-white border border-gray-200 rounded-xl px-3 py-2">
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#9ca3af"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          style={{ flexShrink: 0 }}
-        >
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input
-          className="flex-1 bg-transparent border-none outline-none text-[13px] text-gray-800 placeholder:text-gray-400"
-          placeholder="Search folders..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div> */}
-
       <div className="flex flex-col gap-2.5 px-4 pb-4 pt-2">
         {showUngrouped && (
-          <FolderCard
-            id="ungrouped"
-            name="Ungrouped"
-            count={ungroupedCount}
-            onClick={() => navigate("/folders/ungrouped")}
-          />
+          <FolderCard id="ungrouped" name="Ungrouped" count={ungroupedCount} onClick={() => openFolderDetail("ungrouped")} />
         )}
 
-        {filteredFolders.length === 0 && !showNewFolder ? (
-          <p className="text-center text-gray-400 text-[13px] p-5">
-            No folders yet. Create one below.
-          </p>
-        ) : search ? (
-          <div className="flex flex-col gap-2.5">
-            {filteredFolders.map((f) => {
-              const count = groups.filter((g) => g.folderId === f.id).length;
-              return (
-                <FolderCard
-                  key={f.id}
-                  id={f.id}
-                  name={f.name}
-                  count={count}
-                  onClick={() => navigate(`/folders/${f.id}`)}
-                />
-              );
-            })}
-          </div>
+        {localOrder.length === 0 && !showCreateModal ? (
+          <p className="text-center text-gray-400 text-[13px] p-5">No folders yet. Create one below.</p>
         ) : (
-          <Reorder.Group
-            as="div"
-            axis="y"
-            values={localOrder}
-            onReorder={handleReorder}
-            className="flex flex-col gap-2.5"
-          >
+          <Reorder.Group as="div" axis="y" values={localOrder} onReorder={handleReorder} className="flex flex-col gap-2.5">
             {localOrder.map((f) => {
               const count = groups.filter((g) => g.folderId === f.id).length;
               return (
@@ -170,49 +85,135 @@ export function FolderListPage({
                   key={f.id}
                   folder={f}
                   count={count}
-                  onNavigate={() => navigate(`/folders/${f.id}`)}
+                  onNavigate={() => openFolderDetail(f.id)}
+                  onRename={(name) => updateFolder(f.id, name)}
+                  onDelete={() => deleteFolder(f.id)}
+                  onUpdateAppearance={(icon, iconColor) => updateFolderAppearance(f.id, icon, iconColor)}
                 />
               );
             })}
           </Reorder.Group>
         )}
 
-        {showNewFolder ? (
-          <div className="flex gap-2">
-            <input
-              className="flex-1 text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500"
-              placeholder="Folder name..."
-              value={newFolderName}
-              autoFocus
-              onChange={(e) => setNewFolderName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") submitFolder();
-                if (e.key === "Escape") setShowNewFolder(false);
-              }}
-            />
-            <button
-              className="font-[inherit] text-xs font-medium px-2.5 py-1.5 rounded-md border-none cursor-pointer transition-opacity hover:opacity-80 bg-gray-900 text-white disabled:opacity-40 disabled:cursor-not-allowed"
-              onClick={submitFolder}
-              disabled={!newFolderName.trim()}
-            >
-              Create
-            </button>
-            <button
-              className="font-[inherit] text-xs font-medium px-2.5 py-1.5 rounded-md border-none cursor-pointer transition-opacity hover:opacity-80 bg-gray-200 text-gray-600"
-              onClick={() => setShowNewFolder(false)}
-            >
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <button
-            className="text-[13px] text-indigo-600 bg-transparent border border-dashed border-indigo-200 rounded-xl px-3.5 py-3 cursor-pointer text-left transition-colors hover:bg-indigo-50 font-[inherit]"
-            onClick={() => setShowNewFolder(true)}
-          >
-            + New folder
-          </button>
-        )}
+        <button
+          className="text-[13px] text-indigo-600 bg-transparent border border-dashed border-indigo-200 rounded-xl px-3.5 py-3 cursor-pointer text-left transition-colors hover:bg-indigo-50 font-[inherit]"
+          onClick={() => {
+            setCreateName("");
+            setCreateIcon(GROUP_ICONS[0].id);
+            setCreateColor(DOT_COLORS[0]);
+            setShowCreateModal(true);
+          }}
+        >
+          + New folder
+        </button>
       </div>
+
+      {/* Create folder modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCreateModal(false)}
+              className="fixed inset-0 bg-black/20 z-40"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -16 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl z-50 w-full max-w-xs mx-4 p-5"
+            >
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">New folder</h3>
+
+              {/* Preview */}
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: createColor + "20" }}>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={createColor}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    dangerouslySetInnerHTML={{ __html: GROUP_ICONS.find((i) => i.id === createIcon)?.svg ?? GROUP_ICONS[0].svg }}
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-400 mb-1.5">Name</p>
+              <input
+                className="w-full text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 mb-4"
+                placeholder="Folder name..."
+                value={createName}
+                autoFocus
+                onChange={(e) => setCreateName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitFolder();
+                  if (e.key === "Escape") setShowCreateModal(false);
+                }}
+              />
+
+              <p className="text-xs text-gray-400 mb-2">Color</p>
+              <div className="flex gap-2 mb-4">
+                {DOT_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCreateColor(c)}
+                    className="w-6 h-6 rounded-full shrink-0 cursor-pointer transition-transform hover:scale-110"
+                    style={{ background: c, outline: createColor === c ? `2px solid ${c}` : "2px solid transparent", outlineOffset: "2px" }}
+                  />
+                ))}
+              </div>
+
+              <p className="text-xs text-gray-400 mb-2">Icon</p>
+              <div className="grid grid-cols-4 gap-1 mb-5">
+                {GROUP_ICONS.map((ic) => (
+                  <button
+                    key={ic.id}
+                    onClick={() => setCreateIcon(ic.id)}
+                    className="flex items-center justify-center h-10 rounded-lg cursor-pointer transition-colors"
+                    style={{ background: createIcon === ic.id ? createColor + "18" : undefined }}
+                    title={ic.label}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={createIcon === ic.id ? createColor : "#9ca3af"}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      dangerouslySetInnerHTML={{ __html: ic.svg }}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:opacity-80 transition-opacity border-none cursor-pointer disabled:opacity-40"
+                  disabled={!createName.trim()}
+                  onClick={submitFolder}
+                >
+                  Create
+                </button>
+                <button
+                  className="px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors border-none cursor-pointer"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
