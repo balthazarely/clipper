@@ -32,6 +32,7 @@ export function Shell(props: ShellContext) {
 
   const onFoldersTab = location.pathname.startsWith("/folders");
   const isFolderDetail = location.pathname.startsWith("/folders/");
+  const onSettingsPage = location.pathname === "/settings";
 
   return (
     <div className="flex flex-col min-h-screen overflow-hidden">
@@ -45,7 +46,7 @@ export function Shell(props: ShellContext) {
             className="relative px-1 py-2 text-sm font-medium text-gray-900 bg-transparent border-none cursor-pointer"
           >
             New Group
-            {!onFoldersTab && (
+            {!onFoldersTab && !onSettingsPage && (
               <motion.div
                 layoutId="activeTab"
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
@@ -59,7 +60,7 @@ export function Shell(props: ShellContext) {
             className="relative px-1 py-2 text-sm font-medium text-gray-900 bg-transparent border-none cursor-pointer"
           >
             Folders
-            {onFoldersTab && (
+            {onFoldersTab && !onSettingsPage && (
               <motion.div
                 layoutId="activeTab"
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
