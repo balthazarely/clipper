@@ -54,6 +54,21 @@ export const GROUP_ICONS: { id: string; label: string; svg: string }[] = [
     label: "Target",
     svg: '<circle cx="12" cy="12" r="1"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9"/>',
   },
+  {
+    id: "activity",
+    label: "Sports",
+    svg: '<circle cx="11" cy="11" r="8"/><path d="M21 17.502v.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-.5"/><path d="M5.8 6.3L7 4m4 0l1.2 2.3m4-2.3l-1.2 2.3"/><path d="M11 15v-5M8 13l2-3 2 3"/>',
+  },
+  {
+    id: "library",
+    label: "Books",
+    svg: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M10 9h8"/><path d="M10 14h8"/><path d="M10 19h8"/>',
+  },
+  {
+    id: "film",
+    label: "Movie",
+    svg: '<rect x="2" y="7" width="20" height="10" rx="2"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="17" x2="22" y2="17"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/>',
+  },
 ];
 
 export const ROUTE_TRANSITION = {
