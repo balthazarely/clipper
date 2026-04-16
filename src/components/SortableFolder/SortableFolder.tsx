@@ -15,7 +15,7 @@ export function SortableFolder({ folder, count, onNavigate, onRename, onDelete, 
   const controls = useDragControls();
 
   return (
-    <Reorder.Item key={folder.id} value={folder} as="div" className="flex-1 min-w-0">
+    <Reorder.Item key={folder.id} value={folder} as="div" dragListener={false} dragControls={controls} className="flex-1 min-w-0">
       <FolderCard
         id={folder.id}
         name={folder.name}

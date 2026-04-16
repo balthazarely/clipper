@@ -65,6 +65,22 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
 
   const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set(tabs.filter((t) => t.url && t.title).map((t) => t.id!)));
 
+  // Sync selectedTabIds when tabs change (e.g. new tab opened/closed)
+  useEffect(() => {
+    const validTabIds = new Set(tabs.filter((t) => t.url && t.title).map((t) => t.id!));
+    setSelectedTabIds((prev) => {
+      // Keep selected tabs that still exist, add any new tabs
+      const updated = new Set<number>();
+      validTabIds.forEach((id) => {
+        if (prev.has(id)) updated.add(id);
+      });
+      validTabIds.forEach((id) => {
+        if (!prev.has(id)) updated.add(id);
+      });
+      return updated;
+    });
+  }, [tabs]);
+
   const validTabs = tabs.filter((t) => t.url && t.title && selectedTabIds.has(t.id!));
 
   const handleRemoveTab = (tabId: number) => {

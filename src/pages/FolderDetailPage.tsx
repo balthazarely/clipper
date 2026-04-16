@@ -37,11 +37,10 @@ export function FolderDetailPage({ context }: { context: ShellContext }) {
 
   const [localOrder, setLocalOrder] = useState<TabGroup[]>(folderGroups);
 
-  // Reset when switching folders
+  // Reset when switching folders or when folderGroups changes
   useEffect(() => {
     setLocalOrder(folderGroups);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [folderId]);
+  }, [folderId, groups]);
 
   // Sync additions/deletions from outside while preserving manual order
   useEffect(() => {
@@ -51,8 +50,7 @@ export function FolderDetailPage({ context }: { context: ShellContext }) {
     const keptIds = new Set(kept.map((g) => g.id));
     const added = folderGroups.filter((g) => !keptIds.has(g.id));
     setLocalOrder([...kept, ...added]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groups]);
+  }, [folderId, groups]);
 
   const handleReorder = (newOrder: TabGroup[]) => {
     setLocalOrder(newOrder);
