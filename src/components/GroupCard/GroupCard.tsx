@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Reorder, useDragControls, AnimatePresence, motion } from "framer-motion";
-import type { Folder, SavedTab, TabGroup } from "../../lib/types";
+import type { Folder, Label, SavedTab, TabGroup } from "../../lib/types";
 import { CARD_ACCORDION_ICON_TRANSITION, CARD_ACCORDION_TRANSITION, GROUP_ICONS, DOT_COLORS } from "../../lib/constants";
 import { dotColor } from "../../lib/utils";
 import type { DragControls } from "framer-motion";
@@ -91,6 +91,7 @@ function TabRow({ tab, onDelete }: { tab: SavedTab; onDelete: () => void }) {
 export function GroupCard({
   g,
   folders,
+  labels,
   onDelete,
   onMove,
   onUpdate,
@@ -103,6 +104,7 @@ export function GroupCard({
 }: {
   g: TabGroup;
   folders: Folder[];
+  labels: Label[];
   onDelete: () => void;
   onMove: (folderId: string | undefined) => void;
   onUpdate: (tabs: SavedTab[]) => void;
@@ -123,6 +125,8 @@ export function GroupCard({
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [showAppearanceModal, setShowAppearanceModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isLabelsDropdownOpen, setIsLabelsDropdownOpen] = useState(false);
+  const labelsDropdownRef = useRef<HTMLDivElement>(null);
   const [editIcon, setEditIcon] = useState(g.icon ?? GROUP_ICONS[0].id);
   const [editColor, setEditColor] = useState(g.iconColor ?? dotColor(g.id));
   const [editName, setEditName] = useState(g.name);
@@ -260,11 +264,22 @@ export function GroupCard({
             transition={CARD_ACCORDION_TRANSITION}
           >
             <div className="py-3">
-              {g.label && (
+              {g.label && labels.find((l) => l.id === g.label) && (
                 <div className="px-4 pb-3">
-                  <span className="inline-block text-[11px] font-medium bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full">
-                    {g.label}
-                  </span>
+                  {(() => {
+                    const label = labels.find((l) => l.id === g.label);
+                    return (
+                      <span
+                        className="inline-block text-[11px] font-medium px-2.5 py-0.5 rounded-full"
+                        style={{
+                          background: label?.color ? label.color + "15" : "#f3f4f6",
+                          color: label?.color || "#6b7280",
+                        }}
+                      >
+                        {label?.name}
+                      </span>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -422,38 +437,96 @@ export function GroupCard({
 
                 {/* Label / Tag */}
                 <p className="text-xs text-gray-400 mb-1.5">Label</p>
-                <input
-                  className="w-full text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 mb-4"
-                  placeholder="Optional label (e.g., 'Work', 'Personal')"
-                  value={editLabel}
-                  onChange={(e) => setEditLabel(e.target.value)}
-                />
+                <div className="relative mb-4" ref={labelsDropdownRef}>
+                  <button
+                    onClick={() => setIsLabelsDropdownOpen(!isLabelsDropdownOpen)}
+                    className="w-full text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 cursor-pointer text-left flex items-center justify-between"
+                  >
+                    <span className={editLabel ? "text-gray-900" : "text-gray-400"}>
+                      {editLabel ? labels.find((l) => l.id === editLabel)?.name : "Select a label... (optional)"}
+                    </span>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      style={{
+                        transform: isLabelsDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s",
+                      }}
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                  {isLabelsDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48 overflow-y-auto">
+                      <button
+                        onClick={() => {
+                          setEditLabel("");
+                          setIsLabelsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left text-[13px] px-2.5 py-2 transition-colors ${
+                          editLabel === ""
+                            ? "bg-indigo-50 text-indigo-600"
+                            : "hover:bg-gray-50 text-gray-900"
+                        }`}
+                      >
+                        None
+                      </button>
+                      {labels.map((l) => (
+                        <button
+                          key={l.id}
+                          onClick={() => {
+                            setEditLabel(l.id);
+                            setIsLabelsDropdownOpen(false);
+                          }}
+                          className={`w-full text-left text-[13px] px-2.5 py-2 transition-colors flex items-center gap-2 ${
+                            editLabel === l.id
+                              ? "bg-indigo-50 text-indigo-600"
+                              : "hover:bg-gray-50 text-gray-900"
+                          }`}
+                        >
+                          {l.color && (
+                            <div
+                              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                              style={{ background: l.color }}
+                            />
+                          )}
+                          {l.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                {/* Preview */}
-                <div className="flex justify-center mb-4">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: editColor + "18" }}>
+                {/* Preview and Color */}
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: editColor + "18" }}>
                     {(() => {
                       const PreviewIcon = (GROUP_ICONS.find((i) => i.id === editIcon) ?? GROUP_ICONS[0]).icon;
                       return <PreviewIcon size={20} color={editColor} />;
                     })()}
                   </div>
-                </div>
-
-                {/* Color swatches */}
-                <p className="text-xs text-gray-400 mb-2">Color</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {DOT_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setEditColor(c)}
-                      className="w-6 h-6 rounded-full cursor-pointer transition-transform hover:scale-110"
-                      style={{
-                        background: c,
-                        outline: editColor === c ? `2px solid ${c}` : "2px solid transparent",
-                        outlineOffset: "2px",
-                      }}
-                    />
-                  ))}
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-400 mb-2">Color</p>
+                    <div className="flex flex-wrap gap-2">
+                      {DOT_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setEditColor(c)}
+                          className="w-6 h-6 rounded-full cursor-pointer transition-transform hover:scale-110"
+                          style={{
+                            background: c,
+                            outline: editColor === c ? `2px solid ${c}` : "2px solid transparent",
+                            outlineOffset: "2px",
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Icon grid */}

@@ -5,12 +5,13 @@ import { NewGroupPage } from "../../pages/NewGroupPage";
 import { FolderListPage } from "../../pages/FolderListPage";
 import { FolderDetailPage } from "../../pages/FolderDetailPage";
 import { SettingsPage } from "../../pages/SettingsPage";
-import type { Folder, TabGroup } from "../../lib/types";
+import type { Folder, Label, TabGroup } from "../../lib/types";
 
 export type ShellContext = {
   tabs: chrome.tabs.Tab[];
   groups: TabGroup[];
   folders: Folder[];
+  labels: Label[];
   saveGroup: (group: TabGroup) => void;
   createFolder: (name: string, icon?: string, iconColor?: string) => void;
   deleteFolder: (id: string) => void;
@@ -25,6 +26,9 @@ export type ShellContext = {
   updateGroupAppearance: (id: string, icon: string, iconColor: string) => void;
   updateGroupDescription: (id: string, description: string) => void;
   updateGroupLabel: (id: string, label: string) => void;
+  createLabel: (name: string, color?: string) => void;
+  updateLabel: (id: string, name: string, color?: string) => void;
+  deleteLabel: (id: string) => void;
 };
 
 export function Shell(props: ShellContext) {
@@ -38,7 +42,7 @@ export function Shell(props: ShellContext) {
 
   return (
     <div className="flex flex-col min-h-screen overflow-hidden">
-      <Header onNewGroup={() => navigate("/")} />
+      <Header onNewGroup={() => navigate("/")} onSettings={() => navigate("/settings")} />
 
       <LayoutGroup>
         <div role="tablist" className="flex items-center gap-4 px-3 pt-2 pb-1 border-b border-gray-200">
@@ -70,17 +74,6 @@ export function Shell(props: ShellContext) {
               />
             )}
           </motion.button>
-          <div className="flex-1" />
-          <motion.button
-            role="tab"
-            onClick={() => navigate("/settings")}
-            className="relative px-1 py-2 text-sm font-medium text-gray-500 bg-transparent border-none cursor-pointer hover:text-gray-700 transition-colors"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24" />
-            </svg>
-          </motion.button>
         </div>
       </LayoutGroup>
 
@@ -89,7 +82,7 @@ export function Shell(props: ShellContext) {
           {location.pathname === "/" && <NewGroupPage key="new-group" context={props} />}
           {location.pathname === "/folders" && !isFolderDetail && <FolderListPage key="folders-list" context={props} location={location} />}
           {isFolderDetail && <FolderDetailPage key={`folder-${params.folderId}`} context={props} />}
-          {location.pathname === "/settings" && <SettingsPage key="settings" />}
+          {location.pathname === "/settings" && <SettingsPage key="settings" context={props} />}
         </AnimatePresence>
       </div>
     </div>

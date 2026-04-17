@@ -7,12 +7,13 @@ import { ROUTE_TRANSITION, GROUP_ICONS, DOT_COLORS } from "../lib/constants";
 import { getDepth } from "../lib/utils";
 
 export function NewGroupPage({ context }: { context: ShellContext }) {
-  const { tabs, folders, saveGroup } = context;
+  const { tabs, folders, labels, saveGroup } = context;
   const navigate = useNavigate();
   const location = useLocation();
   const prevDepthRef = useRef<number>(getDepth(location.pathname));
   const dropdownRef = useRef<HTMLDivElement>(null);
   const iconPickerRef = useRef<HTMLDivElement>(null);
+  const labelsDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     prevDepthRef.current = getDepth(location.pathname);
@@ -26,6 +27,7 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
   const [folderId, setFolderId] = useState("");
   const [tabNotes, setTabNotes] = useState<Record<number, string>>({});
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLabelsDropdownOpen, setIsLabelsDropdownOpen] = useState(false);
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState(GROUP_ICONS[0].id);
   const [selectedColor, setSelectedColor] = useState(DOT_COLORS[0]);
@@ -44,6 +46,12 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
         !dropdownRef.current.contains(e.target as Node)
       ) {
         setIsDropdownOpen(false);
+      }
+      if (
+        labelsDropdownRef.current &&
+        !labelsDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsLabelsDropdownOpen(false);
       }
       if (
         iconPickerRef.current &&
@@ -152,12 +160,70 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
         />
-        <input
-          className="w-full text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500"
-          placeholder="Label (e.g. Work, Research)..."
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-        />
+        <div className="relative" ref={labelsDropdownRef}>
+          <button
+            onClick={() => setIsLabelsDropdownOpen(!isLabelsDropdownOpen)}
+            className="w-full text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 cursor-pointer text-left flex items-center justify-between"
+          >
+            <span className={label ? "text-gray-900" : "text-gray-400"}>
+              {label ? labels.find((l) => l.id === label)?.name : "Select a label... (optional)"}
+            </span>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              style={{
+                transform: isLabelsDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s",
+              }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {isLabelsDropdownOpen && (
+            <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-48 overflow-y-auto">
+              <button
+                onClick={() => {
+                  setLabel("");
+                  setIsLabelsDropdownOpen(false);
+                }}
+                className={`w-full text-left text-[13px] px-2.5 py-2 transition-colors ${
+                  label === ""
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "hover:bg-gray-50 text-gray-900"
+                }`}
+              >
+                None
+              </button>
+              {labels.map((l) => (
+                <button
+                  key={l.id}
+                  onClick={() => {
+                    setLabel(l.id);
+                    setIsLabelsDropdownOpen(false);
+                  }}
+                  className={`w-full text-left text-[13px] px-2.5 py-2 transition-colors flex items-center gap-2 ${
+                    label === l.id
+                      ? "bg-indigo-50 text-indigo-600"
+                      : "hover:bg-gray-50 text-gray-900"
+                  }`}
+                >
+                  {l.color && (
+                    <div
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ background: l.color }}
+                    />
+                  )}
+                  {l.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="flex gap-2 items-stretch">
           {/* Icon + color picker */}
           <div className="relative shrink-0" ref={iconPickerRef}>

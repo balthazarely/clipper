@@ -1,5 +1,7 @@
 export type Folder = { id: string; name: string; icon?: string; iconColor?: string };
 
+export type Label = { id: string; name: string; color?: string };
+
 export type TabGroup = {
   id: string;
   name: string;

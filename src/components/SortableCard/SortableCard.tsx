@@ -1,10 +1,11 @@
 import { Reorder, useDragControls } from "framer-motion";
 import { GroupCard } from "../GroupCard/GroupCard";
-import type { Folder, TabGroup } from "../../lib/types";
+import type { Folder, Label, TabGroup } from "../../lib/types";
 
 type SortableCardProps = {
   g: TabGroup;
   folders: Folder[];
+  labels: Label[];
   onDelete: () => void;
   onMove: (folderId: string | undefined) => void;
   onUpdate: (tabs: import("../../lib/types").SavedTab[]) => void;
@@ -15,7 +16,7 @@ type SortableCardProps = {
   onUpdateLabel?: (label: string) => void;
 };
 
-export function SortableCard({ g, folders, onDelete, onMove, onUpdate, onRename, onUpdateAppearance, onCreateFolder, onUpdateDescription, onUpdateLabel }: SortableCardProps) {
+export function SortableCard({ g, folders, labels, onDelete, onMove, onUpdate, onRename, onUpdateAppearance, onCreateFolder, onUpdateDescription, onUpdateLabel }: SortableCardProps) {
   const controls = useDragControls();
 
   return (
@@ -30,6 +31,7 @@ export function SortableCard({ g, folders, onDelete, onMove, onUpdate, onRename,
       <GroupCard
         g={g}
         folders={folders}
+        labels={labels}
         onDelete={onDelete}
         onMove={onMove}
         onUpdate={onUpdate}

@@ -69,7 +69,7 @@ export function FolderListPage({ context, location }: { context: ShellContext; l
       transition={ROUTE_TRANSITION}
       className="absolute inset-0 w-full h-full flex flex-col overflow-hidden"
     >
-      <div className="flex flex-col gap-2.5 px-4 pb-4 pt-2">
+      <div className="flex flex-col gap-2.5 px-4 pb-4 pt-2 flex-1 overflow-y-auto">
         {showUngrouped && (
           <FolderCard id="ungrouped" name="Ungrouped" count={ungroupedCount} onClick={() => openFolderDetail("ungrouped")} />
         )}

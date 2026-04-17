@@ -1,8 +1,11 @@
+import { IoSettingsSharp } from "react-icons/io5";
+
 type HeaderProps = {
   onNewGroup: () => void;
+  onSettings: () => void;
 };
 
-export function Header({ onNewGroup }: HeaderProps) {
+export function Header({ onNewGroup, onSettings }: HeaderProps) {
   return (
     <div className="bg-gray-950 px-3.5 py-3 flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
@@ -60,6 +63,13 @@ export function Header({ onNewGroup }: HeaderProps) {
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
+          </button>
+          <button
+            className="text-gray-400 rounded-lg w-7.5 h-7.5 flex items-center justify-center cursor-pointer transition-colors hover:text-gray-200"
+            onClick={onSettings}
+            title="Settings"
+          >
+            <IoSettingsSharp size={18} />
           </button>
         </div>
       </div>

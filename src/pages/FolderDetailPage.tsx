@@ -8,7 +8,7 @@ import { ROUTE_TRANSITION } from "../lib/constants";
 import { getDepth } from "../lib/utils";
 
 export function FolderDetailPage({ context }: { context: ShellContext }) {
-  const { folders, groups, deleteGroup, moveGroup, reorderGroups, updateGroup, renameGroup, updateGroupAppearance, updateGroupDescription, updateGroupLabel } = context;
+  const { folders, groups, labels, deleteGroup, moveGroup, reorderGroups, updateGroup, renameGroup, updateGroupAppearance, updateGroupDescription, updateGroupLabel } = context;
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -75,7 +75,7 @@ export function FolderDetailPage({ context }: { context: ShellContext }) {
         <span className="text-sm font-bold text-gray-900 flex-1 text-left">{title}</span>
       </div>
 
-      <div className="flex flex-col gap-2.5 px-4 pb-4">
+      <div className="flex flex-col gap-2.5 px-4 pb-4 flex-1 overflow-y-auto">
         {localOrder.length === 0 ? (
           <p className="text-center text-gray-400 text-[13px] p-5">No groups here yet.</p>
         ) : (
@@ -85,6 +85,7 @@ export function FolderDetailPage({ context }: { context: ShellContext }) {
                 key={g.id}
                 g={g}
                 folders={folders}
+                labels={labels}
                 onDelete={() => deleteGroup(g.id)}
                 onMove={(fid) => moveGroup(g.id, fid)}
                 onUpdate={(tabs) => updateGroup(g.id, tabs)}

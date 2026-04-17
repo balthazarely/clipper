@@ -126,18 +126,6 @@ export function FolderCard({
             {count} {count === 1 ? "group" : "groups"}
           </span>
         </div>
-
-        {onDelete && (
-          <button
-            className="shrink-0 ml-2 text-gray-300 hover:text-red-500 cursor-pointer transition-colors text-lg leading-none w-5 h-5 flex items-center justify-center rounded"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDeleteModal(true);
-            }}
-          >
-            ×
-          </button>
-        )}
       </div>
 
       <ContextMenu

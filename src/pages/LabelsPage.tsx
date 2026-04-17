@@ -1,18 +1,15 @@
-import { useState, forwardRef, useRef } from "react";
+import { useState, forwardRef } from "react";
 import { motion } from "framer-motion";
-import { ROUTE_TRANSITION, DOT_COLORS } from "../lib/constants";
+import { DOT_COLORS, ROUTE_TRANSITION } from "../lib/constants";
 import { ConfirmationModal } from "../components/ConfirmationModal/ConfirmationModal";
 import { ContextMenu } from "../components/ContextMenu/ContextMenu";
 import type { ContextMenuItem } from "../components/ContextMenu/ContextMenu";
 import type { ShellContext } from "../components/Shell/Shell";
-import type { Folder, TabGroup } from "../lib/types";
 
-export const SettingsPage = forwardRef<
+export const LabelsPage = forwardRef<
   HTMLDivElement,
   { context: ShellContext }
->(function SettingsPage({ context }, ref) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+>(function LabelsPage({ context }, ref) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState(DOT_COLORS[0]);
@@ -30,12 +27,8 @@ export const SettingsPage = forwardRef<
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const isDuplicateName = context.labels.some(
-    (l) => l.name.toLowerCase() === newLabelName.trim().toLowerCase()
-  );
-
   const handleCreateLabel = () => {
-    if (newLabelName.trim() && !isDuplicateName) {
+    if (newLabelName.trim()) {
       context.createLabel(newLabelName.trim(), newLabelColor);
       setNewLabelName("");
       setNewLabelColor(DOT_COLORS[0]);
@@ -83,151 +76,72 @@ export const SettingsPage = forwardRef<
     { label: "Delete", onClick: handleDeleteClick, isDanger: true },
   ];
 
-  const handleExport = () => {
-    chrome.storage.local.get(["tabGroups", "folders", "labels"], (result) => {
-      const data = {
-        folders: (result.folders as Folder[]) || [],
-        groups: (result.tabGroups as TabGroup[]) || [],
-        labels: (result.labels as any[]) || [],
-      };
-
-      const dataStr = JSON.stringify(data, null, 2);
-      const dataBlob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `tab-vault-backup-${Date.now()}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    });
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const content = event.target?.result as string;
-        const data = JSON.parse(content);
-
-        if (!data.folders || !data.groups) {
-          alert("Invalid backup file format");
-          return;
-        }
-
-        chrome.storage.local.set({
-          folders: data.folders,
-          tabGroups: data.groups,
-          labels: data.labels || [],
-        });
-
-        alert("Data imported successfully. Please refresh the extension.");
-      } catch (error) {
-        alert("Error importing data: Invalid JSON format");
-      }
-    };
-
-    reader.readAsText(file);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
   return (
+    <>
     <motion.div
       ref={ref}
+      className="absolute inset-0 w-full h-full flex flex-col overflow-hidden"
       initial={{ x: "100%" }}
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={ROUTE_TRANSITION}
-      className="absolute inset-0 w-full h-full flex flex-col overflow-hidden"
     >
       <div className="flex items-center gap-2 px-4 pt-2 pb-3">
-        <span className="text-sm font-bold text-gray-900 flex-1 text-left">Settings</span>
+        <span className="text-sm font-bold text-gray-900 flex-1 text-left">
+          Labels
+        </span>
       </div>
 
-      <div className="flex flex-col gap-4 px-4 pb-4 flex-1 overflow-y-auto">
-        {/* Labels Section */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Labels</h3>
-          {context.labels.length === 0 ? (
-            <div className="space-y-2">
-              <p className="text-center text-gray-400 text-[13px] p-3">
-                No labels yet.
-              </p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="w-full text-[13px] text-indigo-600 bg-transparent border border-dashed border-indigo-200 rounded-xl px-3.5 py-2.5 cursor-pointer text-left transition-colors hover:bg-indigo-50 font-[inherit]"
+      <div className="flex flex-col gap-2.5 px-4 pb-4 flex-1 overflow-y-auto">
+        {context.labels.length === 0 ? (
+          <p className="text-center text-gray-400 text-[13px] p-5">
+            No labels yet.
+          </p>
+        ) : (
+          <div className="space-y-2.5">
+            {context.labels.map((label) => (
+              <div
+                key={label.id}
+                className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+                onContextMenu={(e) => handleContextMenu(e, label.id)}
               >
-                + Create Label
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {context.labels.map((label) => (
-                <div
-                  key={label.id}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-200 hover:border-gray-300 transition-all cursor-pointer"
-                  onContextMenu={(e) => handleContextMenu(e, label.id)}
+                {label.color && (
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ background: label.color }}
+                  />
+                )}
+                <span
+                  className="inline-block text-[12px] font-medium px-2.5 py-0.5 rounded-full"
+                  style={{
+                    background: label.color ? label.color + "15" : "#f3f4f6",
+                    color: label.color || "#6b7280",
+                  }}
                 >
-                  {label.color && (
-                    <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ background: label.color }}
-                    />
-                  )}
-                  <span
-                    className="inline-block text-[12px] font-medium px-2.5 py-0.5 rounded-full"
-                    style={{
-                      background: label.color ? label.color + "15" : "#f3f4f6",
-                      color: label.color || "#6b7280",
-                    }}
-                  >
-                    {label.name}
-                  </span>
-                </div>
-              ))}
+                  {label.name}
+                </span>
+              </div>
+            ))}
+
+            {context.labels.length > 0 && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="w-full text-[13px] text-indigo-600 bg-transparent border border-dashed border-indigo-200 rounded-xl px-3.5 py-2.5 cursor-pointer text-left transition-colors hover:bg-indigo-50 font-[inherit] mt-2"
+                className="text-[13px] text-indigo-600 bg-transparent border border-dashed border-indigo-200 rounded-xl px-3.5 py-3 cursor-pointer text-left transition-colors hover:bg-indigo-50 font-[inherit] mt-2"
               >
                 + Create Label
               </button>
-            </div>
-          )}
-        </div>
-
-        {/* Data Section */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Data</h3>
-          <div className="space-y-2">
-            <button
-              className="w-full text-left text-xs text-indigo-600 font-medium px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors border border-indigo-200"
-              onClick={handleExport}
-            >
-              Export data
-            </button>
-            <button
-              className="w-full text-left text-xs text-indigo-600 font-medium px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors border border-indigo-200"
-              onClick={handleImportClick}
-            >
-              Import data
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
+            )}
           </div>
-        </div>
+        )}
+
+        {context.labels.length === 0 && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="text-[13px] text-indigo-600 bg-transparent border border-dashed border-indigo-200 rounded-xl px-3.5 py-3 cursor-pointer text-left transition-colors hover:bg-indigo-50 font-[inherit]"
+          >
+            + Create Label
+          </button>
+        )}
       </div>
 
       {/* Create Label Modal */}
@@ -249,18 +163,12 @@ export const SettingsPage = forwardRef<
               value={newLabelName}
               onChange={(e) => setNewLabelName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && newLabelName.trim() && !isDuplicateName)
+                if (e.key === "Enter" && newLabelName.trim())
                   handleCreateLabel();
                 if (e.key === "Escape") setShowCreateModal(false);
               }}
               className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 mb-4"
             />
-
-            {isDuplicateName && (
-              <p className="text-xs text-red-500 mb-3">
-                A label with this name already exists.
-              </p>
-            )}
 
             <p className="text-xs text-gray-400 mb-2">Color</p>
             <div className="flex flex-wrap gap-2 mb-4">
@@ -290,7 +198,7 @@ export const SettingsPage = forwardRef<
               </button>
               <button
                 onClick={handleCreateLabel}
-                disabled={!newLabelName.trim() || isDuplicateName}
+                disabled={!newLabelName.trim()}
                 className="flex-1 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer"
               >
                 Create
@@ -389,5 +297,6 @@ export const SettingsPage = forwardRef<
         onCancel={() => setDeleteConfirmId(null)}
       />
     </motion.div>
+    </>
   );
 });
