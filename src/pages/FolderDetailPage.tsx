@@ -8,7 +8,7 @@ import { ROUTE_TRANSITION } from "../lib/constants";
 import { getDepth } from "../lib/utils";
 
 export function FolderDetailPage({ context }: { context: ShellContext }) {
-  const { folders, groups, deleteGroup, moveGroup, reorderGroups, updateGroup, renameGroup, updateGroupAppearance } = context;
+  const { folders, groups, deleteGroup, moveGroup, reorderGroups, updateGroup, renameGroup, updateGroupAppearance, updateGroupDescription, updateGroupLabel } = context;
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -90,6 +90,8 @@ export function FolderDetailPage({ context }: { context: ShellContext }) {
                 onUpdate={(tabs) => updateGroup(g.id, tabs)}
                 onRename={(newName) => renameGroup(g.id, newName)}
                 onUpdateAppearance={(icon, iconColor) => updateGroupAppearance(g.id, icon, iconColor)}
+                onUpdateDescription={(description) => updateGroupDescription(g.id, description)}
+                onUpdateLabel={(label) => updateGroupLabel(g.id, label)}
                 onCreateFolder={context.createFolder}
               />
             ))}

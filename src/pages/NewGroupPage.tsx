@@ -39,10 +39,16 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
-      if (iconPickerRef.current && !iconPickerRef.current.contains(e.target as Node)) {
+      if (
+        iconPickerRef.current &&
+        !iconPickerRef.current.contains(e.target as Node)
+      ) {
         setIsIconPickerOpen(false);
       }
     };
@@ -63,11 +69,15 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
     setIsDropdownOpen(false);
   };
 
-  const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set(tabs.filter((t) => t.url && t.title).map((t) => t.id!)));
+  const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(
+    new Set(tabs.filter((t) => t.url && t.title).map((t) => t.id!)),
+  );
 
   // Sync selectedTabIds when tabs change (e.g. new tab opened/closed)
   useEffect(() => {
-    const validTabIds = new Set(tabs.filter((t) => t.url && t.title).map((t) => t.id!));
+    const validTabIds = new Set(
+      tabs.filter((t) => t.url && t.title).map((t) => t.id!),
+    );
     setSelectedTabIds((prev) => {
       // Keep selected tabs that still exist, add any new tabs
       const updated = new Set<number>();
@@ -81,7 +91,9 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
     });
   }, [tabs]);
 
-  const validTabs = tabs.filter((t) => t.url && t.title && selectedTabIds.has(t.id!));
+  const validTabs = tabs.filter(
+    (t) => t.url && t.title && selectedTabIds.has(t.id!),
+  );
 
   const handleRemoveTab = (tabId: number) => {
     const newSelected = new Set(selectedTabIds);
@@ -151,20 +163,16 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
           <div className="relative shrink-0" ref={iconPickerRef}>
             <button
               onClick={() => setIsIconPickerOpen((v) => !v)}
-              className="h-full min-h-[34px] aspect-square flex items-center justify-center rounded-lg border border-gray-200 cursor-pointer transition-colors hover:border-gray-300"
+              className="h-full min-h-8.5 aspect-square flex items-center justify-center rounded-lg border border-gray-200 cursor-pointer transition-colors hover:border-gray-300"
               style={{ background: selectedColor + "18" }}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={selectedColor}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                dangerouslySetInnerHTML={{ __html: GROUP_ICONS.find((i) => i.id === selectedIcon)?.svg ?? GROUP_ICONS[0].svg }}
-              />
+              {(() => {
+                const IconComponent = (
+                  GROUP_ICONS.find((i) => i.id === selectedIcon) ??
+                  GROUP_ICONS[0]
+                ).icon;
+                return <IconComponent size={16} color={selectedColor} />;
+              })()}
             </button>
             {isIconPickerOpen && (
               <div className="absolute top-full left-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 p-2 w-52">
@@ -177,7 +185,10 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
                       className="w-5 h-5 rounded-full shrink-0 cursor-pointer transition-transform hover:scale-110"
                       style={{
                         background: c,
-                        outline: selectedColor === c ? `2px solid ${c}` : "2px solid transparent",
+                        outline:
+                          selectedColor === c
+                            ? `2px solid ${c}`
+                            : "2px solid transparent",
                         outlineOffset: "2px",
                       }}
                     />
@@ -185,29 +196,30 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
                 </div>
                 {/* Icon grid */}
                 <div className="grid grid-cols-4 gap-1">
-                  {GROUP_ICONS.map((icon) => (
-                    <button
-                      key={icon.id}
-                      onClick={() => setSelectedIcon(icon.id)}
-                      className="flex items-center justify-center w-10 h-10 rounded-lg cursor-pointer transition-colors"
-                      style={{
-                        background: selectedIcon === icon.id ? selectedColor + "18" : undefined,
-                      }}
-                      title={icon.label}
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke={selectedIcon === icon.id ? selectedColor : "#9ca3af"}
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        dangerouslySetInnerHTML={{ __html: icon.svg }}
-                      />
-                    </button>
-                  ))}
+                  {GROUP_ICONS.map((icon) => {
+                    const IconOption = icon.icon;
+                    return (
+                      <button
+                        key={icon.id}
+                        onClick={() => setSelectedIcon(icon.id)}
+                        className="flex items-center justify-center w-10 h-10 rounded-lg cursor-pointer transition-colors"
+                        style={{
+                          background:
+                            selectedIcon === icon.id
+                              ? selectedColor + "18"
+                              : undefined,
+                        }}
+                        title={icon.label}
+                      >
+                        <IconOption
+                          size={16}
+                          color={
+                            selectedIcon === icon.id ? selectedColor : "#9ca3af"
+                          }
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -243,7 +255,9 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
                     setIsDropdownOpen(false);
                   }}
                   className={`w-full text-left text-[13px] px-2.5 py-2 transition-colors ${
-                    folderId === "" ? "bg-indigo-50 text-indigo-600" : "hover:bg-gray-50 text-gray-900"
+                    folderId === ""
+                      ? "bg-indigo-50 text-indigo-600"
+                      : "hover:bg-gray-50 text-gray-900"
                   }`}
                 >
                   Ungrouped
@@ -256,7 +270,9 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
                       setIsDropdownOpen(false);
                     }}
                     className={`w-full text-left text-[13px] px-2.5 py-2 transition-colors ${
-                      folderId === f.id ? "bg-indigo-50 text-indigo-600" : "hover:bg-gray-50 text-gray-900"
+                      folderId === f.id
+                        ? "bg-indigo-50 text-indigo-600"
+                        : "hover:bg-gray-50 text-gray-900"
                     }`}
                   >
                     {f.name}
@@ -278,7 +294,7 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
             )}
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg max-h-[180px] overflow-y-auto py-1">
+        <div className="bg-white border border-gray-200 rounded-lg max-h-45 overflow-y-auto py-1">
           {validTabs.map((t) => (
             <div
               key={t.id}
@@ -286,21 +302,33 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  {t.favIconUrl && <img src={t.favIconUrl} className="w-3.5 h-3.5 shrink-0 rounded-sm" alt="" />}
-                  <span className="text-xs text-gray-700 truncate">{t.title}</span>
+                  {t.favIconUrl && (
+                    <img
+                      src={t.favIconUrl}
+                      className="w-3.5 h-3.5 shrink-0 rounded-sm"
+                      alt=""
+                    />
+                  )}
+                  <span className="text-xs text-gray-700 truncate">
+                    {t.title}
+                  </span>
                 </div>
                 <button
                   className="shrink-0 opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all flex items-center justify-center rounded cursor-pointer"
                   onClick={() => handleRemoveTab(t.id!)}
                 >
-                  <span className="text-lg leading-none w-5 h-5 flex items-center justify-center">×</span>
+                  <span className="text-lg leading-none w-5 h-5 flex items-center justify-center">
+                    ×
+                  </span>
                 </button>
               </div>
               <input
                 className="text-[11px] text-gray-500 bg-transparent border-0 border-b border-dashed border-gray-200 outline-none py-0.5 w-full placeholder:text-gray-300 focus:border-gray-400"
                 placeholder="Add a note... (optional)"
                 value={tabNotes[t.id!] ?? ""}
-                onChange={(e) => setTabNotes((prev) => ({ ...prev, [t.id!]: e.target.value }))}
+                onChange={(e) =>
+                  setTabNotes((prev) => ({ ...prev, [t.id!]: e.target.value }))
+                }
               />
             </div>
           ))}
@@ -332,22 +360,23 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl z-50 w-full max-w-xs mx-4 p-5"
             >
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">New folder</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                New folder
+              </h3>
 
               {/* Preview */}
               <div className="flex justify-center mb-4">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: folderModalColor + "20" }}>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={folderModalColor}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    dangerouslySetInnerHTML={{ __html: GROUP_ICONS.find((i) => i.id === folderModalIcon)?.svg ?? GROUP_ICONS[0].svg }}
-                  />
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                  style={{ background: folderModalColor + "20" }}
+                >
+                  {(() => {
+                    const PreviewIcon = (
+                      GROUP_ICONS.find((i) => i.id === folderModalIcon) ??
+                      GROUP_ICONS[0]
+                    ).icon;
+                    return <PreviewIcon size={20} color={folderModalColor} />;
+                  })()}
                 </div>
               </div>
 
@@ -373,7 +402,10 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
                     className="w-6 h-6 rounded-full shrink-0 cursor-pointer transition-transform hover:scale-110"
                     style={{
                       background: c,
-                      outline: folderModalColor === c ? `2px solid ${c}` : "2px solid transparent",
+                      outline:
+                        folderModalColor === c
+                          ? `2px solid ${c}`
+                          : "2px solid transparent",
                       outlineOffset: "2px",
                     }}
                   />
@@ -382,27 +414,32 @@ export function NewGroupPage({ context }: { context: ShellContext }) {
 
               <p className="text-xs text-gray-400 mb-2">Icon</p>
               <div className="grid grid-cols-4 gap-1 mb-5">
-                {GROUP_ICONS.map((ic) => (
-                  <button
-                    key={ic.id}
-                    onClick={() => setFolderModalIcon(ic.id)}
-                    className="flex items-center justify-center h-10 rounded-lg cursor-pointer transition-colors"
-                    style={{ background: folderModalIcon === ic.id ? folderModalColor + "18" : undefined }}
-                    title={ic.label}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke={folderModalIcon === ic.id ? folderModalColor : "#9ca3af"}
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      dangerouslySetInnerHTML={{ __html: ic.svg }}
-                    />
-                  </button>
-                ))}
+                {GROUP_ICONS.map((ic) => {
+                  const IconOption = ic.icon;
+                  return (
+                    <button
+                      key={ic.id}
+                      onClick={() => setFolderModalIcon(ic.id)}
+                      className="flex items-center justify-center h-10 rounded-lg cursor-pointer transition-colors"
+                      style={{
+                        background:
+                          folderModalIcon === ic.id
+                            ? folderModalColor + "18"
+                            : undefined,
+                      }}
+                      title={ic.label}
+                    >
+                      <IconOption
+                        size={16}
+                        color={
+                          folderModalIcon === ic.id
+                            ? folderModalColor
+                            : "#9ca3af"
+                        }
+                      />
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="flex gap-2">

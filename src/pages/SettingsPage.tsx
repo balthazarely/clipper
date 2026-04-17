@@ -1,12 +1,19 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { ROUTE_TRANSITION } from "../lib/constants";
+import { getDepth } from "../lib/utils";
 import type { Folder, TabGroup } from "../lib/types";
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prevDepthRef = useRef<number>(getDepth(location.pathname));
+
+  useEffect(() => {
+    prevDepthRef.current = getDepth(location.pathname);
+  }, [location.pathname]);
 
   const handleExport = () => {
     chrome.storage.local.get(["tabGroups", "folders"], (result) => {
@@ -61,6 +68,8 @@ export function SettingsPage() {
     reader.readAsText(file);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  const isReturning = getDepth(location.pathname) < prevDepthRef.current;
 
   return (
     <motion.div

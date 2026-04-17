@@ -7,9 +7,11 @@ import type { DragControls } from "framer-motion";
 import { ContextMenu } from "../ContextMenu/ContextMenu";
 import type { ContextMenuItem } from "../ContextMenu/ContextMenu";
 import { FolderSelectModal } from "../FolderSelectModal/FolderSelectModal";
+import { ConfirmationModal } from "../ConfirmationModal/ConfirmationModal";
 
 function TabRow({ tab, onDelete }: { tab: SavedTab; onDelete: () => void }) {
   const controls = useDragControls();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
     <Reorder.Item as="div" value={tab} dragListener={false} dragControls={controls}>
@@ -48,15 +50,39 @@ function TabRow({ tab, onDelete }: { tab: SavedTab; onDelete: () => void }) {
         <span className="flex-1 text-[13px] text-gray-800 truncate">{tab.title}</span>
 
         {/* Delete */}
-        <button
-          className="shrink-0 opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all w-5 h-5 flex items-center justify-center rounded text-base leading-none"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-        >
-          ×
-        </button>
+        {!showDeleteConfirm ? (
+          <button
+            className="shrink-0 opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all w-5 h-5 flex items-center justify-center rounded text-base leading-none cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteConfirm(true);
+            }}
+          >
+            ×
+          </button>
+        ) : (
+          <div className="shrink-0 flex gap-1">
+            <button
+              className="text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all px-2 py-0.5 flex items-center justify-center rounded text-xs leading-none cursor-pointer font-medium"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteConfirm(false);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="text-red-600 bg-red-50 hover:bg-red-100 transition-all px-2 py-0.5 flex items-center justify-center rounded text-xs leading-none cursor-pointer font-medium"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+                setShowDeleteConfirm(false);
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        )}
       </div>
     </Reorder.Item>
   );
@@ -71,6 +97,8 @@ export function GroupCard({
   onRename,
   onUpdateAppearance,
   onCreateFolder,
+  onUpdateDescription,
+  onUpdateLabel,
   dragControls,
 }: {
   g: TabGroup;
@@ -81,6 +109,8 @@ export function GroupCard({
   onRename: (newName: string) => void;
   onUpdateAppearance: (icon: string, iconColor: string) => void;
   onCreateFolder: (name: string) => void;
+  onUpdateDescription?: (description: string) => void;
+  onUpdateLabel?: (label: string) => void;
   dragControls?: DragControls;
 }) {
   const [open, setOpen] = useState(false);
@@ -92,12 +122,16 @@ export function GroupCard({
   } | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [showAppearanceModal, setShowAppearanceModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editIcon, setEditIcon] = useState(g.icon ?? GROUP_ICONS[0].id);
   const [editColor, setEditColor] = useState(g.iconColor ?? dotColor(g.id));
   const [editName, setEditName] = useState(g.name);
+  const [editDescription, setEditDescription] = useState(g.description ?? "");
+  const [editLabel, setEditLabel] = useState(g.label ?? "");
 
   const color = g.iconColor ?? dotColor(g.id);
   const iconDef = GROUP_ICONS.find((i) => i.id === g.icon) ?? GROUP_ICONS[0];
+  const IconComponent = iconDef.icon;
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -111,6 +145,8 @@ export function GroupCard({
         setEditIcon(g.icon ?? GROUP_ICONS[0].id);
         setEditColor(g.iconColor ?? dotColor(g.id));
         setEditName(g.name);
+        setEditDescription(g.description ?? "");
+        setEditLabel(g.label ?? "");
         setShowAppearanceModal(true);
       },
     },
@@ -122,7 +158,7 @@ export function GroupCard({
     },
     {
       label: "Delete",
-      onClick: onDelete,
+      onClick: () => setShowDeleteModal(true),
       isDanger: true,
     },
   ];
@@ -185,17 +221,7 @@ export function GroupCard({
               justifyContent: "center",
             }}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke={color}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              dangerouslySetInnerHTML={{ __html: iconDef.svg }}
-            />
+            <IconComponent size={16} color={color} />
           </div>
 
           <div className="flex-1 min-w-0 text-left">
@@ -311,6 +337,21 @@ export function GroupCard({
         onClose={() => setContextMenu(null)}
       />
 
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title="Delete group?"
+        message={`Delete "${g.name}"? This cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous
+        onConfirm={() => {
+          onDelete();
+          setShowDeleteModal(false);
+        }}
+        onCancel={() => setShowDeleteModal(false)}
+      />
+
       <FolderSelectModal
         isOpen={showMoveModal}
         folders={folders}
@@ -343,98 +384,108 @@ export function GroupCard({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -16 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl z-50 w-full max-w-xs mx-4 p-5"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl z-50 w-full max-w-xs mx-4 max-h-[90vh] flex flex-col"
             >
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Settings</h3>
+              <div className="flex-1 overflow-y-auto p-5">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Settings</h3>
 
-              {/* Name */}
-              <p className="text-xs text-gray-400 mb-1.5">Name</p>
-              <input
-                className="w-full text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 mb-4"
-                value={editName}
-                autoFocus
-                onChange={(e) => setEditName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const n = editName.trim();
-                    if (n) {
-                      onRename(n);
+                {/* Name */}
+                <p className="text-xs text-gray-400 mb-1.5">Name</p>
+                <input
+                  className="w-full text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 mb-4"
+                  value={editName}
+                  autoFocus
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const n = editName.trim();
+                      if (n) {
+                        onRename(n);
+                      }
+                      onUpdateAppearance(editIcon, editColor);
+                      onUpdateDescription?.(editDescription);
+                      onUpdateLabel?.(editLabel);
+                      setShowAppearanceModal(false);
                     }
-                    onUpdateAppearance(editIcon, editColor);
-                    setShowAppearanceModal(false);
-                  }
-                  if (e.key === "Escape") setShowAppearanceModal(false);
-                }}
-              />
+                    if (e.key === "Escape") setShowAppearanceModal(false);
+                  }}
+                />
 
-              {/* Preview */}
-              <div className="flex justify-center mb-4">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: editColor + "18" }}>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={editColor}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    dangerouslySetInnerHTML={{ __html: GROUP_ICONS.find((i) => i.id === editIcon)?.svg ?? GROUP_ICONS[0].svg }}
-                  />
+                {/* Description */}
+                <p className="text-xs text-gray-400 mb-1.5">Description</p>
+                <input
+                  className="w-full text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 mb-4"
+                  placeholder="Optional description"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                />
+
+                {/* Label / Tag */}
+                <p className="text-xs text-gray-400 mb-1.5">Label</p>
+                <input
+                  className="w-full text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 mb-4"
+                  placeholder="Optional label (e.g., 'Work', 'Personal')"
+                  value={editLabel}
+                  onChange={(e) => setEditLabel(e.target.value)}
+                />
+
+                {/* Preview */}
+                <div className="flex justify-center mb-4">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: editColor + "18" }}>
+                    {(() => {
+                      const PreviewIcon = (GROUP_ICONS.find((i) => i.id === editIcon) ?? GROUP_ICONS[0]).icon;
+                      return <PreviewIcon size={20} color={editColor} />;
+                    })()}
+                  </div>
+                </div>
+
+                {/* Color swatches */}
+                <p className="text-xs text-gray-400 mb-2">Color</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {DOT_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setEditColor(c)}
+                      className="w-6 h-6 rounded-full cursor-pointer transition-transform hover:scale-110"
+                      style={{
+                        background: c,
+                        outline: editColor === c ? `2px solid ${c}` : "2px solid transparent",
+                        outlineOffset: "2px",
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Icon grid */}
+                <p className="text-xs text-gray-400 mb-2">Icon</p>
+                <div className="grid grid-cols-4 gap-1 mb-5">
+                  {GROUP_ICONS.map((iconDef) => {
+                    const IconOption = iconDef.icon;
+                    return (
+                      <button
+                        key={iconDef.id}
+                        onClick={() => setEditIcon(iconDef.id)}
+                        className="flex items-center justify-center h-10 rounded-lg cursor-pointer transition-colors"
+                        style={{ background: editIcon === iconDef.id ? editColor + "18" : undefined }}
+                        title={iconDef.label}
+                      >
+                        <IconOption size={16} color={editIcon === iconDef.id ? editColor : "#9ca3af"} />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Color swatches */}
-              <p className="text-xs text-gray-400 mb-2">Color</p>
-              <div className="flex gap-2 mb-4">
-                {DOT_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setEditColor(c)}
-                    className="w-6 h-6 rounded-full shrink-0 cursor-pointer transition-transform hover:scale-110"
-                    style={{
-                      background: c,
-                      outline: editColor === c ? `2px solid ${c}` : "2px solid transparent",
-                      outlineOffset: "2px",
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Icon grid */}
-              <p className="text-xs text-gray-400 mb-2">Icon</p>
-              <div className="grid grid-cols-4 gap-1 mb-5">
-                {GROUP_ICONS.map((icon) => (
-                  <button
-                    key={icon.id}
-                    onClick={() => setEditIcon(icon.id)}
-                    className="flex items-center justify-center h-10 rounded-lg cursor-pointer transition-colors"
-                    style={{ background: editIcon === icon.id ? editColor + "18" : undefined }}
-                    title={icon.label}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke={editIcon === icon.id ? editColor : "#9ca3af"}
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      dangerouslySetInnerHTML={{ __html: icon.svg }}
-                    />
-                  </button>
-                ))}
-              </div>
-
               {/* Actions */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 p-5 border-t border-gray-100">
                 <button
                   className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:opacity-80 transition-opacity border-none cursor-pointer"
                   onClick={() => {
                     const n = editName.trim();
                     if (n && n !== g.name) onRename(n);
                     onUpdateAppearance(editIcon, editColor);
+                    onUpdateDescription?.(editDescription);
+                    onUpdateLabel?.(editLabel);
                     setShowAppearanceModal(false);
                   }}
                 >

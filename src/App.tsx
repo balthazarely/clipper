@@ -115,6 +115,22 @@ function App() {
     });
   };
 
+  const updateGroupDescription = (id: string, description: string) => {
+    setGroups((prev) => {
+      const updated = prev.map((g) => (g.id === id ? { ...g, description } : g));
+      chrome.storage.local.set({ tabGroups: updated });
+      return updated;
+    });
+  };
+
+  const updateGroupLabel = (id: string, label: string) => {
+    setGroups((prev) => {
+      const updated = prev.map((g) => (g.id === id ? { ...g, label } : g));
+      chrome.storage.local.set({ tabGroups: updated });
+      return updated;
+    });
+  };
+
   const reorderGroups = (reordered: TabGroup[]) => {
     setGroups((prev) => {
       const ids = new Set(reordered.map((g) => g.id));
@@ -162,6 +178,8 @@ function App() {
     updateGroup,
     renameGroup,
     updateGroupAppearance,
+    updateGroupDescription,
+    updateGroupLabel,
     updateFolderAppearance,
   };
 

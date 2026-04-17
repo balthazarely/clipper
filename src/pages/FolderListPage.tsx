@@ -131,17 +131,10 @@ export function FolderListPage({ context, location }: { context: ShellContext; l
               {/* Preview */}
               <div className="flex justify-center mb-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: createColor + "20" }}>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={createColor}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    dangerouslySetInnerHTML={{ __html: GROUP_ICONS.find((i) => i.id === createIcon)?.svg ?? GROUP_ICONS[0].svg }}
-                  />
+                  {(() => {
+                    const PreviewIcon = (GROUP_ICONS.find((i) => i.id === createIcon) ?? GROUP_ICONS[0]).icon;
+                    return <PreviewIcon size={20} color={createColor} />;
+                  })()}
                 </div>
               </div>
 
@@ -172,27 +165,20 @@ export function FolderListPage({ context, location }: { context: ShellContext; l
 
               <p className="text-xs text-gray-400 mb-2">Icon</p>
               <div className="grid grid-cols-4 gap-1 mb-5">
-                {GROUP_ICONS.map((ic) => (
-                  <button
-                    key={ic.id}
-                    onClick={() => setCreateIcon(ic.id)}
-                    className="flex items-center justify-center h-10 rounded-lg cursor-pointer transition-colors"
-                    style={{ background: createIcon === ic.id ? createColor + "18" : undefined }}
-                    title={ic.label}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke={createIcon === ic.id ? createColor : "#9ca3af"}
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      dangerouslySetInnerHTML={{ __html: ic.svg }}
-                    />
-                  </button>
-                ))}
+                {GROUP_ICONS.map((ic) => {
+                  const IconOption = ic.icon;
+                  return (
+                    <button
+                      key={ic.id}
+                      onClick={() => setCreateIcon(ic.id)}
+                      className="flex items-center justify-center h-10 rounded-lg cursor-pointer transition-colors"
+                      style={{ background: createIcon === ic.id ? createColor + "18" : undefined }}
+                      title={ic.label}
+                    >
+                      <IconOption size={16} color={createIcon === ic.id ? createColor : "#9ca3af"} />
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="flex gap-2">

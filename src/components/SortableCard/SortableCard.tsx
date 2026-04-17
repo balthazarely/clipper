@@ -11,9 +11,11 @@ type SortableCardProps = {
   onRename: (newName: string) => void;
   onUpdateAppearance: (icon: string, iconColor: string) => void;
   onCreateFolder: (name: string) => void;
+  onUpdateDescription?: (description: string) => void;
+  onUpdateLabel?: (label: string) => void;
 };
 
-export function SortableCard({ g, folders, onDelete, onMove, onUpdate, onRename, onUpdateAppearance, onCreateFolder }: SortableCardProps) {
+export function SortableCard({ g, folders, onDelete, onMove, onUpdate, onRename, onUpdateAppearance, onCreateFolder, onUpdateDescription, onUpdateLabel }: SortableCardProps) {
   const controls = useDragControls();
 
   return (
@@ -34,6 +36,8 @@ export function SortableCard({ g, folders, onDelete, onMove, onUpdate, onRename,
         onRename={onRename}
         onUpdateAppearance={onUpdateAppearance}
         onCreateFolder={onCreateFolder}
+        onUpdateDescription={onUpdateDescription}
+        onUpdateLabel={onUpdateLabel}
         dragControls={controls}
       />
     </Reorder.Item>

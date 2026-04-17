@@ -23,6 +23,8 @@ export type ShellContext = {
   updateGroup: (id: string, tabs: import("../../lib/types").SavedTab[]) => void;
   renameGroup: (id: string, name: string) => void;
   updateGroupAppearance: (id: string, icon: string, iconColor: string) => void;
+  updateGroupDescription: (id: string, description: string) => void;
+  updateGroupLabel: (id: string, label: string) => void;
 };
 
 export function Shell(props: ShellContext) {

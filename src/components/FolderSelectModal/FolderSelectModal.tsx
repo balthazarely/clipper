@@ -55,9 +55,11 @@ export function FolderSelectModal({
                     onSelect(undefined);
                     onClose();
                   }}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition-colors text-center"
+                  className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition-colors text-center cursor-pointer"
                 >
-                  <div
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     style={{
                       width: 40,
                       height: 40,
@@ -83,7 +85,7 @@ export function FolderSelectModal({
                       <rect x="2" y="10" width="20" height="4" rx="1" />
                       <rect x="2" y="17" width="20" height="4" rx="1" />
                     </svg>
-                  </div>
+                  </motion.div>
                   <span className="text-xs font-medium text-gray-900 truncate w-full">
                     Ungrouped
                   </span>
@@ -99,9 +101,11 @@ export function FolderSelectModal({
                         onSelect(folder.id);
                         onClose();
                       }}
-                      className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition-colors text-center"
+                      className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition-colors text-center cursor-pointer"
                     >
-                      <div
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
                         style={{
                           width: 40,
                           height: 40,
@@ -125,7 +129,7 @@ export function FolderSelectModal({
                         >
                           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                         </svg>
-                      </div>
+                      </motion.div>
                       <span className="text-xs font-medium text-gray-900 truncate w-full">
                         {folder.name}
                       </span>
