@@ -4,6 +4,7 @@ import { motion, Reorder, AnimatePresence } from "framer-motion";
 import type { Location } from "react-router-dom";
 import { FolderCard } from "../components/FolderCard/FolderCard";
 import { SortableFolder } from "../components/SortableFolder/SortableFolder";
+import { SearchGroupsModal } from "../components/SearchGroupsModal/SearchGroupsModal";
 import type { ShellContext } from "../components/Shell/Shell";
 import type { Folder } from "../lib/types";
 import { ROUTE_TRANSITION, GROUP_ICONS, DOT_COLORS } from "../lib/constants";
@@ -32,6 +33,8 @@ export function FolderListPage({ context, location }: { context: ShellContext; l
   const [createName, setCreateName] = useState("");
   const [createIcon, setCreateIcon] = useState(GROUP_ICONS[0].id);
   const [createColor, setCreateColor] = useState(DOT_COLORS[0]);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [localOrder, setLocalOrder] = useState<Folder[]>(folders);
 
   useEffect(() => {
@@ -61,6 +64,12 @@ export function FolderListPage({ context, location }: { context: ShellContext; l
     navigate(`/folders/${id}`);
   };
 
+  const handleSelectGroupFromSearch = (group: any) => {
+    setShowSearchModal(false);
+    setSearchQuery("");
+    navigate(`/folders/${group.folderId || "ungrouped"}`, { state: { highlightGroupId: group.id } });
+  };
+
   return (
     <motion.div
       initial={{ x: fromFolderDetail || isReturning ? "-100%" : "100%" }}
@@ -69,7 +78,21 @@ export function FolderListPage({ context, location }: { context: ShellContext; l
       transition={ROUTE_TRANSITION}
       className="absolute inset-0 w-full h-full flex flex-col overflow-hidden"
     >
-      <div className="flex flex-col gap-2.5 px-4 pb-4 pt-2 flex-1 overflow-y-auto">
+      <div className="flex items-center gap-2 px-4 pt-2 pb-3">
+        <span className="text-sm font-bold text-gray-900 flex-1 text-left">Folders</span>
+        <button
+          onClick={() => setShowSearchModal(true)}
+          className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+          title="Search groups"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-2.5 px-4 pb-16 flex-1 overflow-y-auto">
         {showUngrouped && (
           <FolderCard id="ungrouped" name="Ungrouped" count={ungroupedCount} onClick={() => openFolderDetail("ungrouped")} />
         )}
@@ -200,6 +223,19 @@ export function FolderListPage({ context, location }: { context: ShellContext; l
           </>
         )}
       </AnimatePresence>
+
+      <SearchGroupsModal
+        isOpen={showSearchModal}
+        groups={groups}
+        folders={folders}
+        searchQuery={searchQuery}
+        onQueryChange={setSearchQuery}
+        onSelectGroup={handleSelectGroupFromSearch}
+        onClose={() => {
+          setShowSearchModal(false);
+          setSearchQuery("");
+        }}
+      />
     </motion.div>
   );
 }

@@ -92,6 +92,7 @@ export function GroupCard({
   g,
   folders,
   labels,
+  isHighlighted,
   onDelete,
   onMove,
   onUpdate,
@@ -105,6 +106,7 @@ export function GroupCard({
   g: TabGroup;
   folders: Folder[];
   labels: Label[];
+  isHighlighted?: boolean;
   onDelete: () => void;
   onMove: (folderId: string | undefined) => void;
   onUpdate: (tabs: SavedTab[]) => void;
@@ -187,7 +189,9 @@ export function GroupCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm text-left">
+    <div className={`rounded-2xl overflow-hidden border border-gray-200 shadow-sm text-left transition-colors duration-500 ${
+      isHighlighted ? "bg-blue-100" : "bg-white"
+    }`}>
       {/* Header row */}
       <div className="w-full flex items-center gap-2 px-2 py-3 text-left" onContextMenu={handleContextMenu}>
         {/* Drag handle - only show if dragControls provided */}
@@ -230,7 +234,24 @@ export function GroupCard({
 
           <div className="flex-1 min-w-0 text-left">
             <p className="text-sm font-semibold text-gray-900 truncate mb-0.5">{g.name}</p>
-            <p className="text-xs text-gray-400 truncate">{g.description || `${g.tabs.length} tab${g.tabs.length !== 1 ? "s" : ""}`}</p>
+            {g.label && labels.find((l) => l.id === g.label) ? (
+              (() => {
+                const label = labels.find((l) => l.id === g.label);
+                return (
+                  <span
+                    className="inline-block text-[11px] font-medium px-2.5 py-0.5 rounded-full"
+                    style={{
+                      background: label?.color ? label.color + "15" : "#f3f4f6",
+                      color: label?.color || "#6b7280",
+                    }}
+                  >
+                    {label?.name}
+                  </span>
+                );
+              })()
+            ) : (
+              <p className="text-xs text-gray-400">{`${g.tabs.length} tab${g.tabs.length !== 1 ? "s" : ""}`}</p>
+            )}
           </div>
 
           <svg
@@ -264,22 +285,9 @@ export function GroupCard({
             transition={CARD_ACCORDION_TRANSITION}
           >
             <div className="py-3">
-              {g.label && labels.find((l) => l.id === g.label) && (
+              {g.description && (
                 <div className="px-4 pb-3">
-                  {(() => {
-                    const label = labels.find((l) => l.id === g.label);
-                    return (
-                      <span
-                        className="inline-block text-[11px] font-medium px-2.5 py-0.5 rounded-full"
-                        style={{
-                          background: label?.color ? label.color + "15" : "#f3f4f6",
-                          color: label?.color || "#6b7280",
-                        }}
-                      >
-                        {label?.name}
-                      </span>
-                    );
-                  })()}
+                  <p className="text-xs text-gray-500">{g.description}</p>
                 </div>
               )}
 
@@ -334,7 +342,9 @@ export function GroupCard({
 
                 <button
                   className="font-[inherit] bg-transparent border border-gray-200 text-indigo-600 text-xs font-medium px-3 py-1.5 rounded-lg cursor-pointer transition-colors hover:bg-indigo-50 text-left"
-                  onClick={() => g.tabs.forEach((t) => chrome.tabs.create({ url: t.url }))}
+                  onClick={() => {
+                    g.tabs.forEach((t) => chrome.tabs.create({ url: t.url }));
+                  }}
                 >
                   Open all {g.tabs.length} tabs
                 </button>
@@ -440,7 +450,7 @@ export function GroupCard({
                 <div className="relative mb-4" ref={labelsDropdownRef}>
                   <button
                     onClick={() => setIsLabelsDropdownOpen(!isLabelsDropdownOpen)}
-                    className="w-full text-[13px] px-2.5 py-2 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 cursor-pointer text-left flex items-center justify-between"
+                    className="w-full text-[13px] px-2.5 py-1.5 rounded-lg border border-gray-200 outline-none bg-white text-gray-900 focus:border-indigo-500 cursor-pointer text-left flex items-center justify-between"
                   >
                     <span className={editLabel ? "text-gray-900" : "text-gray-400"}>
                       {editLabel ? labels.find((l) => l.id === editLabel)?.name : "Select a label... (optional)"}

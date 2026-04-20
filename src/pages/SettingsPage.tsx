@@ -29,6 +29,7 @@ export const SettingsPage = forwardRef<
   const [editingColor, setEditingColor] = useState("");
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
 
   const isDuplicateName = context.labels.some(
     (l) => l.name.toLowerCase() === newLabelName.trim().toLowerCase()
@@ -139,6 +140,16 @@ export const SettingsPage = forwardRef<
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleDeleteAllData = () => {
+    chrome.storage.local.set({
+      tabGroups: [],
+      folders: [],
+      labels: [],
+    });
+    setShowDeleteAllModal(false);
+    alert("All data has been deleted. Please refresh the extension.");
+  };
+
   return (
     <motion.div
       ref={ref}
@@ -208,16 +219,22 @@ export const SettingsPage = forwardRef<
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Data</h3>
           <div className="space-y-2">
             <button
-              className="w-full text-left text-xs text-indigo-600 font-medium px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors border border-indigo-200"
+              className="w-full text-left text-xs text-indigo-600 font-medium px-3 py-2 rounded-lg hover:bg-indigo-50 hover:cursor-pointer transition-colors border border-indigo-200"
               onClick={handleExport}
             >
               Export data
             </button>
             <button
-              className="w-full text-left text-xs text-indigo-600 font-medium px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors border border-indigo-200"
+              className="w-full text-left text-xs text-indigo-600 font-medium px-3 py-2 rounded-lg hover:bg-indigo-50 hover:cursor-pointer transition-colors border border-indigo-200"
               onClick={handleImportClick}
             >
               Import data
+            </button>
+            <button
+              className="w-full text-left text-xs text-red-600 font-medium px-3 py-2 rounded-lg hover:bg-red-50 hover:cursor-pointer transition-colors border border-red-200"
+              onClick={() => setShowDeleteAllModal(true)}
+            >
+              Delete all data
             </button>
             <input
               ref={fileInputRef}
@@ -387,6 +404,18 @@ export const SettingsPage = forwardRef<
           }
         }}
         onCancel={() => setDeleteConfirmId(null)}
+      />
+
+      {/* Delete All Data Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteAllModal}
+        title="Delete all data?"
+        message="This will permanently delete all folders, groups, and labels. This cannot be undone."
+        confirmText="Delete all"
+        cancelText="Cancel"
+        isDangerous
+        onConfirm={handleDeleteAllData}
+        onCancel={() => setShowDeleteAllModal(false)}
       />
     </motion.div>
   );

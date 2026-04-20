@@ -12,6 +12,7 @@ export function FolderDetailPage({ context }: { context: ShellContext }) {
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const [highlightedGroupId, setHighlightedGroupId] = useState<string | null>(null);
 
   const prevDepthRef = useRef<number>(getDepth(location.pathname));
   const folderGroupsCacheRef = useRef<TabGroup[]>([]);
@@ -20,6 +21,42 @@ export function FolderDetailPage({ context }: { context: ShellContext }) {
   useEffect(() => {
     prevDepthRef.current = getDepth(location.pathname);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const highlightGroupId = (location.state as any)?.highlightGroupId;
+    if (highlightGroupId) {
+      setHighlightedGroupId(highlightGroupId);
+
+      // Wait for the DOM to be ready and scroll to the highlighted group
+      const timer = setTimeout(() => {
+        const element = document.getElementById(`group-${highlightGroupId}`);
+        console.log("Looking for element:", `group-${highlightGroupId}`, element);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } else {
+          console.log("Element not found, retrying...");
+          // Retry after another delay
+          const retryTimer = setTimeout(() => {
+            const retryElement = document.getElementById(`group-${highlightGroupId}`);
+            if (retryElement) {
+              retryElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+          }, 500);
+          return () => clearTimeout(retryTimer);
+        }
+      }, 300);
+
+      // Remove highlight after 4 seconds with smooth fade
+      const fadeTimer = setTimeout(() => {
+        setHighlightedGroupId(null);
+      }, 4000);
+
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(fadeTimer);
+      };
+    }
+  }, [location.state]);
 
   const isUngrouped = folderId === "ungrouped";
   const folder = folders.find((f) => f.id === folderId);
@@ -75,26 +112,31 @@ export function FolderDetailPage({ context }: { context: ShellContext }) {
         <span className="text-sm font-bold text-gray-900 flex-1 text-left">{title}</span>
       </div>
 
-      <div className="flex flex-col gap-2.5 px-4 pb-4 flex-1 overflow-y-auto">
+      <div className="flex flex-col gap-2.5 px-4 pb-16 flex-1 overflow-y-auto">
         {localOrder.length === 0 ? (
           <p className="text-center text-gray-400 text-[13px] p-5">No groups here yet.</p>
         ) : (
           <Reorder.Group as="div" axis="y" values={localOrder} onReorder={handleReorder} className="flex flex-col gap-2.5">
             {localOrder.map((g) => (
-              <SortableCard
+              <div
                 key={g.id}
-                g={g}
-                folders={folders}
-                labels={labels}
-                onDelete={() => deleteGroup(g.id)}
-                onMove={(fid) => moveGroup(g.id, fid)}
-                onUpdate={(tabs) => updateGroup(g.id, tabs)}
-                onRename={(newName) => renameGroup(g.id, newName)}
-                onUpdateAppearance={(icon, iconColor) => updateGroupAppearance(g.id, icon, iconColor)}
-                onUpdateDescription={(description) => updateGroupDescription(g.id, description)}
-                onUpdateLabel={(label) => updateGroupLabel(g.id, label)}
-                onCreateFolder={context.createFolder}
-              />
+                id={`group-${g.id}`}
+              >
+                <SortableCard
+                  g={g}
+                  folders={folders}
+                  labels={labels}
+                  isHighlighted={highlightedGroupId === g.id}
+                  onDelete={() => deleteGroup(g.id)}
+                  onMove={(fid) => moveGroup(g.id, fid)}
+                  onUpdate={(tabs) => updateGroup(g.id, tabs)}
+                  onRename={(newName) => renameGroup(g.id, newName)}
+                  onUpdateAppearance={(icon, iconColor) => updateGroupAppearance(g.id, icon, iconColor)}
+                  onUpdateDescription={(description) => updateGroupDescription(g.id, description)}
+                  onUpdateLabel={(label) => updateGroupLabel(g.id, label)}
+                  onCreateFolder={context.createFolder}
+                />
+              </div>
             ))}
           </Reorder.Group>
         )}

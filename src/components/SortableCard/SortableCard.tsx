@@ -6,6 +6,7 @@ type SortableCardProps = {
   g: TabGroup;
   folders: Folder[];
   labels: Label[];
+  isHighlighted?: boolean;
   onDelete: () => void;
   onMove: (folderId: string | undefined) => void;
   onUpdate: (tabs: import("../../lib/types").SavedTab[]) => void;
@@ -16,7 +17,7 @@ type SortableCardProps = {
   onUpdateLabel?: (label: string) => void;
 };
 
-export function SortableCard({ g, folders, labels, onDelete, onMove, onUpdate, onRename, onUpdateAppearance, onCreateFolder, onUpdateDescription, onUpdateLabel }: SortableCardProps) {
+export function SortableCard({ g, folders, labels, isHighlighted, onDelete, onMove, onUpdate, onRename, onUpdateAppearance, onCreateFolder, onUpdateDescription, onUpdateLabel }: SortableCardProps) {
   const controls = useDragControls();
 
   return (
@@ -32,6 +33,7 @@ export function SortableCard({ g, folders, labels, onDelete, onMove, onUpdate, o
         g={g}
         folders={folders}
         labels={labels}
+        isHighlighted={isHighlighted}
         onDelete={onDelete}
         onMove={onMove}
         onUpdate={onUpdate}

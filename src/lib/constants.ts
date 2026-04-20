@@ -1,4 +1,4 @@
-import { FiLayers, FiBookmark, FiStar, FiCode, FiGlobe, FiBriefcase, FiBook, FiZap, FiFolder, FiHeart, FiInbox, FiArchive, FiTarget, FiActivity, FiFilm } from "react-icons/fi";
+import { FiLayers, FiBookmark, FiStar, FiCode, FiGlobe, FiBriefcase, FiBook, FiZap, FiFolder, FiHeart, FiInbox, FiArchive, FiTarget, FiActivity, FiFilm, FiMusic } from "react-icons/fi";
 
 export const DOT_COLORS = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
@@ -18,6 +18,7 @@ export const GROUP_ICONS: { id: string; label: string; icon: React.ComponentType
   { id: "target", label: "Target", icon: FiTarget },
   { id: "activity", label: "Sports", icon: FiActivity },
   { id: "film", label: "Movie", icon: FiFilm },
+  { id: "music", label: "Music", icon: FiMusic },
 ];
 
 export const ROUTE_TRANSITION = {
